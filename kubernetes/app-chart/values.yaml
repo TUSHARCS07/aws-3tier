@@ -1,0 +1,15 @@
+# These get overwritten by GitHub Actions during deployment
+ecrRegistry: "REPLACE_WITH_YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com"
+
+backend:
+  image:
+    repository: "app-backend"
+    tag: "latest"
+  replicas: 2
+  targetCPUUtilizationPercentage: 50
+
+frontend:
+  image:
+    repository: "app-frontend"
+    tag: "latest"
+  replicas: 2

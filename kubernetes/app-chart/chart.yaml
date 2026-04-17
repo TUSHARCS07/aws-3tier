@@ -1,0 +1,6 @@
+apiVersion: v2
+name: my-app
+description: A Helm chart for our 3-tier AWS application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

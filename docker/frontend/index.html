@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>Frontend is running!</h1>
+  <p id="data">Loading API data...</p>
+  <script>
+    fetch('/api/data')
+      .then(r => r.json())
+      .then(d => document.getElementById('data').innerText = d.message)
+      .catch(e => document.getElementById('data').innerText = "API unreachable");
+  </script>
+</body>
+</html>

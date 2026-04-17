@@ -1,0 +1,60 @@
+name: Deploy to EKS
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+
+env:
+  AWS_REGION: "us-east-1"
+  ECR_REPOSITORY_FRONTEND: "app-frontend"
+  ECR_REPOSITORY_BACKEND: "app-backend"
+  EKS_CLUSTER_NAME: "app-cluster"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS Credentials using OIDC
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        role-to-assume: arn:aws:iam::<YOUR_AWS_ACCOUNT_ID>:role/github-actions-deploy-role
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build and Push Backend Image
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        cd docker/backend
+        docker build -t $REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG .
+        docker push $REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG
+
+    - name: Build and Push Frontend Image
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        cd docker/frontend
+        docker build -t $REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG .
+        docker push $REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG
+
+    - name: Update KubeConfig
+      run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+    - name: Deploy via Helm
+      run: |
+        helm upgrade --install my-app ./kubernetes/app-chart \
+        --set backend.image.tag=${{ github.sha }} \
+        --set frontend.image.tag=${{ github.sha }} \
+        --set ecrRegistry=${{ steps.login-ecr.outputs.registry }}
