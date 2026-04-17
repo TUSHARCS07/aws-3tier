@@ -1,0 +1,1 @@
+Please note: I currently do not have access to a personal AWS environment to run a live test of this exact configuration. However, I have structured the Terraform modules, OIDC trust policies, and Helm charts strictly according to AWS and Kubernetes best practices
