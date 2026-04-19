@@ -43,3 +43,39 @@ resource "aws_ecr_repository" "backend" {
   name                 = "app-backend"
   image_tag_mutability = "MUTABLE"
 }
+
+# --- ADD RDS BELOW ---
+
+resource "aws_db_subnet_group" "rds" {
+  name       = "rds-subnet-group"
+  subnet_ids = module.vpc.private_subnets  # reusing same VPC subnets
+}
+
+resource "aws_security_group" "rds" {
+  name   = "rds-sg"
+  vpc_id = module.vpc.vpc_id
+
+  ingress {
+    from_port       = 3306  # change to 5432 if using PostgreSQL
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [module.eks.node_security_group_id]  # only EKS nodes can access
+  }
+}
+
+resource "aws_db_instance" "main" {
+  identifier        = "app-db"
+  engine            = "mysql"   # or "postgres"
+  engine_version    = "8.0"
+  instance_class    = "db.t3.micro"
+  allocated_storage = 20
+
+  db_name  = "appdb"
+  username = "admin"
+  password = "yourpassword"  # change this
+
+  db_subnet_group_name   = aws_db_subnet_group.rds.name
+  vpc_security_group_ids = [aws_security_group.rds.id]
+
+  skip_final_snapshot = true
+}

@@ -18,7 +18,7 @@ resource "aws_iam_role" "github_actions_role" {
       Condition = {
         "StringLike" : {
           # CHANGE THIS to your GitHub username and repository name
-          "token.actions.githubusercontent.com:sub" : "repo:YOUR_GITHUB_USER/YOUR_REPO_NAME:*"
+          "token.actions.githubusercontent.com:sub" : "repo:TUSHARCS07/aws-3tier:*"
         },
         "StringEquals" : {
           "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
